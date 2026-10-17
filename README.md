@@ -114,6 +114,7 @@ iPhone 和 iPad 各自是独立沙盒，存档天然不互通。这套功能把�
 │   ├── cheat_scan.py               # 离线扫描游戏资源包，定位 itemratio / Levels 的压缩块
 │   └── setenv.sh                   # 构建环境变量（路径需按本机修改）
 └── docs/
+    ├── 使用说明（最终版）.txt       # 完整操作手册（安装 / 三大功能 / 配置 / 排错）
     └── images/                     # README 用到的 6 张截图
 ```
 
@@ -158,6 +159,8 @@ cd cheat && python tools/test_dmzip.py
 1. 用 [Sideloadly](https://sideloadly.io/) 把构建好的 IPA 装到设备（免费 Apple ID 即可，本模块不依赖 iCloud 容器权限）
 2. 把手机资源包（游戏资源）按壳的说明放进 App 沙盒
 3. 启动游戏，左上角会出现「金手指」「存档」两个按钮
+
+> 完整操作手册见 [`docs/使用说明（最终版）.txt`](docs/使用说明（最终版）.txt) —— 安装步骤、面板每一项的用法与取值范围、存档搬家全流程、配置文件说明、故障速查表。
 
 ---
 
