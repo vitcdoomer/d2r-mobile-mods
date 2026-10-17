@@ -1,0 +1,29 @@
+# 构建产物
+*.ipa
+*.dylib
+*.o
+*.exe
+*.dSYM/
+build/
+out/
+
+# 测试临时目录
+_run/
+tests/_run/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 本地配置与日志
+*.log
+dmcheat.pos
+dmcheat.txt
+dmarrow.cfg
