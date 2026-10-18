@@ -39,7 +39,7 @@ CLANG = os.path.join(LLVM, 'bin', 'clang.exe')
 NM = os.path.join(LLVM, 'bin', 'llvm-nm.exe')
 GCC = r'E:/10-installed/msys2/mingw64/bin/gcc.exe'
 
-IPA_SRC = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
+IPA_SRC = os.environ.get('DM_IPA_SRC') or r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
 IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16-arrow1f.ipa'
 ROOT_DYLIB_DST = r'E:/02-gitee/07-IOS/diabilo/dmarrow.dylib'
 LOAD_PATH = '@executable_path/Frameworks/dmarrow.dylib'

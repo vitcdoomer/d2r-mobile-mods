@@ -35,12 +35,13 @@ ARROW_TOOLS = r'E:/02-gitee/07-IOS/diabilo/work/arrow/tools'
 TBD_DIR = os.path.join(ARROW_TOOLS, 'ios27_tbds')
 PYTHON = r'C:/Users/goose/.workbuddy/binaries/python/versions/3.13.12/python.exe'
 
-IPA_SRC = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
+BASE_VER = os.environ.get('DM_BASE_VER') or 'v1.0.16'
+IPA_SRC = os.environ.get('DM_IPA_SRC') or r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
 ARROW_DYLIB = r'E:/02-gitee/07-IOS/diabilo/work/arrow/out/dmarrow.dylib'
 ARROW_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/dmarrow.dylib'
-IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16-arrow1g-cheat1o.ipa'
+IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-%s-arrow1g-cheat1o.ipa' % BASE_VER
 ROOT_DYLIB_DST = r'E:/02-gitee/07-IOS/diabilo/dmcheat.dylib'
-OUT_IPA_NAME = 'D2RMobile-v1.0.16-arrow1g-cheat1o.ipa'
+OUT_IPA_NAME = 'D2RMobile-%s-arrow1g-cheat1o.ipa' % BASE_VER
 BUILD_TAG = '20261018-1o'
 
 ZIP_OVERLAYS = [
