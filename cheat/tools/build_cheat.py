@@ -24,7 +24,7 @@ from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHEAT = os.path.dirname(HERE)
-OUT = os.path.join(CHEAT, 'out')
+OUT = os.environ.get('DM_OUT_DIR') or os.path.join(CHEAT, 'out')
 SRC = os.path.join(CHEAT, 'src')
 STUBS = os.path.join(OUT, 'stubs')
 
@@ -38,10 +38,10 @@ PYTHON = r'C:/Users/goose/.workbuddy/binaries/python/versions/3.13.12/python.exe
 IPA_SRC = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
 ARROW_DYLIB = r'E:/02-gitee/07-IOS/diabilo/work/arrow/out/dmarrow.dylib'
 ARROW_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/dmarrow.dylib'
-IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16-arrow1g-cheat1l.ipa'
+IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16-arrow1g-cheat1m.ipa'
 ROOT_DYLIB_DST = r'E:/02-gitee/07-IOS/diabilo/dmcheat.dylib'
-OUT_IPA_NAME = 'D2RMobile-v1.0.16-arrow1g-cheat1l.ipa'
-BUILD_TAG = '20261017-1l'
+OUT_IPA_NAME = 'D2RMobile-v1.0.16-arrow1g-cheat1m.ipa'
+BUILD_TAG = '20261018-1m'
 
 ZIP_OVERLAYS = [
     ('base',    'Payload/DmIOS.app/romfs_overlay'),
@@ -282,13 +282,16 @@ def main():
     say(' 1k：修「长按技能键无反应」—— dmskill 找触摸视图时 respondsToSelector: 漏传 SEL 参数，')
     say('     导致永远找不到视图、识别器根本没挂上；顺带把搜索深度 6→8、挂载日志带视图指针')
     say(' 1l：新增「金手指按钮可拖动」—— 平移手势 + 边界钳制 + 位置存 Documents/dmcheat.pos（重启保留）')
-    say(' 1l：新增「金手指按钮可拖动」—— 平移手势 + 边界钳制 + 位置存 Documents/dmcheat.pos（重启保留）')
+    say(' 1m：爆率新增「黄金（稀有）」档 —— 与暗金/绿色同为 80%，写入 itemratio 的 Rare 组')
     say(' 1h：存档入口独立成按钮，只在主菜单/人物选择页显示，进关卡自动隐藏（禁游戏中读写存档）')
     say('==============================================')
 
     # [1/7] 爆率/密度覆盖层
     say(); say('--- [1/7] 生成爆率/密度数据档覆盖层（离线烘值）---')
-    run([PYTHON, os.path.join(HERE, 'make_rates_overlay.py')])
+    _rates_cmd = [PYTHON, os.path.join(HERE, 'make_rates_overlay.py')]
+    if os.environ.get('DM_RATES_CACHED') == '1':
+        _rates_cmd.append('--cached')
+    run(_rates_cmd)
     say(); say('--- [1/7] 覆盖层链路校验 ---')
     run([PYTHON, os.path.join(HERE, 'verify_overlay.py')])
     subs = {}

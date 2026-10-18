@@ -13,13 +13,14 @@ import hashlib
 import os
 import struct
 import sys
+import time
 import zipfile
 import zlib
 from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHEAT = os.path.dirname(HERE)
-OUT = os.path.join(CHEAT, 'out')
+OUT = os.environ.get('DM_OUT_DIR') or os.path.join(CHEAT, 'out')
 PROJ = r'E:/02-gitee/07-IOS/diabilo'
 IPA = os.path.join(PROJ, 'D2RMobile-v1.0.16.ipa')
 PHONE_DATA = os.path.join(PROJ, 'phone-resource', '游戏资源')
@@ -148,7 +149,7 @@ def main():
         pass
     # 1) 从原始 IPA 抠出旧覆盖层
     z = zipfile.ZipFile(IPA)
-    orig_root = os.path.join(OUT, 'overlay_orig')
+    orig_root = os.path.join(OUT, 'overlay_orig_%d' % int(time.time()))
     for tag, zip_dir in ZIPS:
         d = os.path.join(orig_root, tag, 'data')
         os.makedirs(d, exist_ok=True)
