@@ -38,10 +38,10 @@ PYTHON = r'C:/Users/goose/.workbuddy/binaries/python/versions/3.13.12/python.exe
 IPA_SRC = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
 ARROW_DYLIB = r'E:/02-gitee/07-IOS/diabilo/work/arrow/out/dmarrow.dylib'
 ARROW_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/dmarrow.dylib'
-IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16-arrow1g-cheat1n.ipa'
+IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16-arrow1g-cheat1o.ipa'
 ROOT_DYLIB_DST = r'E:/02-gitee/07-IOS/diabilo/dmcheat.dylib'
-OUT_IPA_NAME = 'D2RMobile-v1.0.16-arrow1g-cheat1n.ipa'
-BUILD_TAG = '20261018-1n'
+OUT_IPA_NAME = 'D2RMobile-v1.0.16-arrow1g-cheat1o.ipa'
+BUILD_TAG = '20261018-1o'
 
 ZIP_OVERLAYS = [
     ('base',    'Payload/DmIOS.app/romfs_overlay'),
@@ -284,6 +284,7 @@ def main():
     say(' 1l：新增「金手指按钮可拖动」—— 平移手势 + 边界钳制 + 位置存 Documents/dmcheat.pos（重启保留）')
     say(' 1m：爆率新增「黄金（稀有）」档 —— 与暗金/绿色同为 80%，写入 itemratio 的 Rare 组')
     say(' 1n：按 itemratio 真实公式重写爆率（Base=2 / Div=60 / Min=160 ⇒ 单件 50~80%）；此前 190+80 实际只有 0.5%')
+    say(' 1o：爆率改为目标占比制 —— 暗金 40% / 绿装 40% / 黄金 10% / 蓝装 6%（条件概率倒推 Min）')
     say(' 1h：存档入口独立成按钮，只在主菜单/人物选择页显示，进关卡自动隐藏（禁游戏中读写存档）')
     say('==============================================')
 

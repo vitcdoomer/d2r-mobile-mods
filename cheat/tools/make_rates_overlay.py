@@ -44,14 +44,17 @@ MANIFEST = os.path.join(PROJ, 'decode', 'RomFS', 'data', 'build_manifest.psv')
 
 # ---- 烘值（命令行可覆盖；改后同步改 dmcheat_ui.c 的「爆率 / 密度（已内置）」文案）----
 # itemratio 真实公式（D2/D2R 通用）：
-#   Chance = (Base - (mlvl-qlvl)/Divisor) * 128
-#   Chance = Chance * 100/(100+EffectiveMF)
-#   if Chance < Min: Chance = Min
-#   命中概率 = 128 / Chance ≈ 1 / Base
-# 所以：Base=2 → 基准 50%；Divisor 越小、等级差越大 → 越接近 Min 决定的上限。
-RATE_BASE = 2    # 基准（2 ⇒ 50%；1 ⇒ 100%，不建议）
-RATE_DIV = 60    # 等级差除数（60 时，等级差 ≥45 即顶到上限）
-CAP = 80         # 目标上限（%）：Min = 128*100/CAP，80% ⇒ Min=160
+#   Chance = (Base - (mlvl-qlvl)/Divisor) * 128  → 乘 MF 系数 → 若 < Min 取 Min
+#   命中率 = 128 / Chance
+# 品质按「暗金 → 绿色 → 黄金 → 魔法」顺序判定、命中即止，
+# 所以每档的 Min 要按「条件概率」倒推：p = 该档目标占比 / 进入该档时的剩余占比，Min = 128/p。
+# Base=1 时 Chance ≤ 128 < Min，命中率恒等于 1/Min（不受等级差影响，结果可预测）。
+U_PCT = 40       # 暗金：占总掉落
+S_PCT = 40       # 绿色
+R_PCT = 10       # 黄金（稀有）
+M_PCT = 6        # 蓝装（魔法）；剩余约 4% 为白装
+RATE_BASE = 1    # 基准（1 ⇒ 原始 100%，实际由 Min 决定）
+RATE_DIV = 60    # 等级差除数（被 Min 封顶后不影响结果）
 DENSITY = 4      # 怪物密度倍率（上限 20000）
 
 # ---- 原始表在 00-00000005.data 里的位置（cheat_scan.py 扫描所得；此处复解核对）----
@@ -131,15 +134,39 @@ def atomic_write(path, data):
         os.replace(tmp, path)
 
 
+def plan_mins():
+    """按顺序判定倒推：每档条件概率 p 与 Min = 128/p。"""
+    rest = 100.0
+    out = []
+    for name, pct in (('unique', U_PCT), ('set', S_PCT), ('rare', R_PCT), ('magic', M_PCT)):
+        if rest <= 0.01 or pct <= 0:
+            out.append((name, pct, 0.0, 0))
+            continue
+        p = min(pct / rest, 1.0)
+        out.append((name, pct, p, int(128 / p + 0.5)))
+        rest -= pct
+    return out
+
+
+def plan_text():
+    names = {'unique': '暗金', 'set': '绿色', 'rare': '黄金', 'magic': '蓝装'}
+    parts = []
+    for n, pct, p, m in plan_mins():
+        if m:
+            parts.append('%s %.0f%%(条件 %.0f%%, Min=%d)' % (names[n], pct, p * 100, m))
+    return ' / '.join(parts)
+
+
 def patch_itemratio(ir):
-    """三档品质（暗金 / 黄金 / 绿色）统一按真实公式写 Base / Divisor / Min。"""
-    rate_min = int(128 * 100 / CAP + 0.5)
+    """四档品质（暗金 / 绿色 / 黄金 / 蓝装）按目标占比写 Base / Divisor / Min。"""
+    mins = {n: m for n, _, _, m in plan_mins()}
     t = bytearray(ir)
     for r in range(6):
         row = 4 + 68 * r
-        wr32(t, row + 0, RATE_BASE); wr32(t, row + 4, RATE_DIV); wr32(t, row + 8, rate_min)    # Unique
-        wr32(t, row + 12, RATE_BASE); wr32(t, row + 16, RATE_DIV); wr32(t, row + 20, rate_min)  # Rare
-        wr32(t, row + 24, RATE_BASE); wr32(t, row + 28, RATE_DIV); wr32(t, row + 32, rate_min)  # Set
+        wr32(t, row + 0, RATE_BASE); wr32(t, row + 4, RATE_DIV); wr32(t, row + 8, mins['unique'])    # Unique
+        wr32(t, row + 12, RATE_BASE); wr32(t, row + 16, RATE_DIV); wr32(t, row + 20, mins['rare'])   # Rare
+        wr32(t, row + 24, RATE_BASE); wr32(t, row + 28, RATE_DIV); wr32(t, row + 32, mins['set'])    # Set
+        wr32(t, row + 36, RATE_BASE); wr32(t, row + 40, RATE_DIV); wr32(t, row + 44, mins['magic'])  # Magic
     return bytes(t)
 
 
@@ -226,19 +253,20 @@ def main():
         sys.stderr.reconfigure(encoding='utf-8', errors='replace')
     except Exception:
         pass
-    global RATE_BASE, RATE_DIV, CAP, DENSITY
+    global U_PCT, S_PCT, R_PCT, M_PCT, RATE_BASE, RATE_DIV, DENSITY
     args = sys.argv[1:]
     for i, a in enumerate(args):
-        if a == '--cap': CAP = int(args[i + 1])
-        if a in ('--unique', '--set', '--rare'):   # 兼容旧参数：三档统一按上限处理
-            CAP = int(args[i + 1])
+        if a in ('--u', '--unique'): U_PCT = int(args[i + 1])
+        if a in ('--s', '--set'):    S_PCT = int(args[i + 1])
+        if a in ('--r', '--rare'):   R_PCT = int(args[i + 1])
+        if a in ('--m', '--magic'):  M_PCT = int(args[i + 1])
         if a == '--base': RATE_BASE = int(args[i + 1])
         if a == '--div': RATE_DIV = int(args[i + 1])
         if a == '--density': DENSITY = int(args[i + 1])
 
     say('==============================================')
-    say(' 爆率/密度 数据档覆盖层生成（三档上限 %d%% · Base %d · Div %d / 密度 x%d）'
-        % (CAP, RATE_BASE, RATE_DIV, DENSITY))
+    say(' 爆率/密度 数据档覆盖层生成（目标：%s / 密度 x%d）'
+        % (plan_text(), DENSITY))
     say('==============================================')
 
     if '--cached' in args:
@@ -246,23 +274,20 @@ def main():
         ir, lv = load_cached_tables()
         ir_p = patch_itemratio(ir)
         lv_p = lv
-        say('改值（离线）: 三档 Base=%d Div=%d Min=%d（上限 %d%%）/ 密度沿用缓存 ×%d'
-            % (RATE_BASE, RATE_DIV, int(128*100/CAP+0.5), CAP, DENSITY))
+        say('改值（离线）: %s / 密度沿用缓存 ×%d' % (plan_text(), DENSITY))
     else:
       try:
         ir, lv = derive_tables()
         ir_p = patch_itemratio(ir)
         lv_p, nmon = patch_levels(lv)
-        say('改值: 三档 Base=%d Div=%d Min=%d（上限 %d%%）/ 密度×%d（%d 个 MonDen 字段）'
-            % (RATE_BASE, RATE_DIV, int(128*100/CAP+0.5), CAP, DENSITY, nmon))
+        say('改值: %s / 密度×%d（%d 个 MonDen 字段）' % (plan_text(), DENSITY, nmon))
       except (PermissionError, OSError) as e:
         say('!! 读不到手机资源包（%s: %s）' % (e.__class__.__name__, e))
         say('!! 回退：使用 out/rates 里上次构建的已改表；黄金档就地补写，密度沿用缓存值')
         ir, lv = load_cached_tables()
         ir_p = patch_itemratio(ir)
         lv_p = lv
-        say('改值（离线回退）: 三档 Base=%d Div=%d Min=%d（上限 %d%%）/ 密度沿用缓存 ×%d'
-            % (RATE_BASE, RATE_DIV, int(128*100/CAP+0.5), CAP, DENSITY))
+        say('改值（离线回退）: %s / 密度沿用缓存 ×%d' % (plan_text(), DENSITY))
 
     rates_dir = os.path.join(OUT, 'rates')
     os.makedirs(rates_dir, exist_ok=True)
@@ -275,7 +300,8 @@ def main():
            hashlib.sha256(ir_p).hexdigest()[:12], hashlib.sha256(lv_p).hexdigest()[:12]))
 
     lines = ['# overlay_manifest — 爆率/密度覆盖层产物清单（cheat1d 构建）',
-             '# 值: base=%d div=%d cap=%d density=%d' % (RATE_BASE, RATE_DIV, CAP, DENSITY)]
+             '# 值: u=%d s=%d r=%d m=%d base=%d div=%d density=%d'
+             % (U_PCT, S_PCT, R_PCT, M_PCT, RATE_BASE, RATE_DIV, DENSITY)]
     for tag, zip_dir in ZIPS:
         out_dir, newname = build_one(tag, zip_dir, ir_path, lv_path)
         for fn in ('.build.config', newname):
