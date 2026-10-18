@@ -39,10 +39,10 @@ BASE_VER = os.environ.get('DM_BASE_VER') or 'v1.0.16'
 IPA_SRC = os.environ.get('DM_IPA_SRC') or r'E:/02-gitee/07-IOS/diabilo/D2RMobile-v1.0.16.ipa'
 ARROW_DYLIB = r'E:/02-gitee/07-IOS/diabilo/work/arrow/out/dmarrow.dylib'
 ARROW_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/dmarrow.dylib'
-IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-%s-arrow1g-cheat1o.ipa' % BASE_VER
+IPA_ROOT_DST = r'E:/02-gitee/07-IOS/diabilo/D2RMobile-%s-arrow1g-cheat1p.ipa' % BASE_VER
 ROOT_DYLIB_DST = r'E:/02-gitee/07-IOS/diabilo/dmcheat.dylib'
-OUT_IPA_NAME = 'D2RMobile-%s-arrow1g-cheat1o.ipa' % BASE_VER
-BUILD_TAG = '20261018-1o'
+OUT_IPA_NAME = 'D2RMobile-%s-arrow1g-cheat1p.ipa' % BASE_VER
+BUILD_TAG = '20261018-1p'
 
 ZIP_OVERLAYS = [
     ('base',    'Payload/DmIOS.app/romfs_overlay'),
@@ -286,6 +286,8 @@ def main():
     say(' 1m：爆率新增「黄金（稀有）」档 —— 与暗金/绿色同为 80%，写入 itemratio 的 Rare 组')
     say(' 1n：按 itemratio 真实公式重写爆率（Base=2 / Div=60 / Min=160 ⇒ 单件 50~80%）；此前 190+80 实际只有 0.5%')
     say(' 1o：爆率改为目标占比制 —— 暗金 40% / 绿装 40% / 黄金 10% / 蓝装 6%（条件概率倒推 Min）')
+    say(' 1p：修「装完闪退 + 二次启动黑屏」—— 覆盖层改为从当前基础包取源（此前误用 1.0.16 的 07 档偏移，')
+    say('     13.3 万条未改动路径全部指错，UI/物品 JSON 读错 → 黑屏）')
     say(' 1h：存档入口独立成按钮，只在主菜单/人物选择页显示，进关卡自动隐藏（禁游戏中读写存档）')
     say('==============================================')
 

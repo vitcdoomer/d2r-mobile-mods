@@ -38,7 +38,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CHEAT = os.path.dirname(HERE)
 OUT = os.environ.get('DM_OUT_DIR') or os.path.join(CHEAT, 'out')
 PROJ = r'E:/02-gitee/07-IOS/diabilo'
-IPA = os.path.join(PROJ, 'D2RMobile-v1.0.16.ipa')
+# ★ 覆盖层必须从「当前基础包」取：路径树的未改动条目指向 07 号档，偏移只对该包内的 07 有效
+IPA = os.environ.get('DM_IPA_SRC') or os.path.join(PROJ, 'D2RMobile-v1.0.16.ipa')
 PHONE_DATA = os.path.join(PROJ, 'phone-resource', '游戏资源')
 MANIFEST = os.path.join(PROJ, 'decode', 'RomFS', 'data', 'build_manifest.psv')
 
