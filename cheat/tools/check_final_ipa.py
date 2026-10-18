@@ -16,7 +16,7 @@ CHEAT = os.path.dirname(HERE)
 OUT = os.environ.get('DM_OUT_DIR') or os.path.join(CHEAT, 'out')
 PROJ = r'E:/02-gitee/07-IOS/diabilo'
 IPA_ORIG = os.path.join(PROJ, 'D2RMobile-v1.0.16.ipa')
-IPA_NEW = os.path.join(PROJ, 'D2RMobile-v1.0.16-arrow1g-cheat1m.ipa')
+IPA_NEW = os.path.join(PROJ, 'D2RMobile-v1.0.16-arrow1g-cheat1n.ipa')
 
 sys.path.insert(0, HERE)
 import casc_overlay_local as co

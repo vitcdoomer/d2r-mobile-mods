@@ -412,7 +412,7 @@ static int build_panel(void) {
 
     mk_section(y, "爆率 / 密度（已内置）", pw); y += 20;
     {
-        void *n1 = mk_label("暗金 80% · 绿色 80% · 黄金 80% · 密度 ×4", 12, 0, mk_color(0.82, 0.86, 0.94, 1), 0);
+        void *n1 = mk_label("暗金·绿色·黄金 最高 80% · 密度 ×4", 12, 0, mk_color(0.82, 0.86, 0.94, 1), 0);
         qvrect(n1, s.setframe, (dmc_rect){ 14, y, pw - 28, 16 });
         qv1(g_scroll, s.sub, n1);
         y += 18;

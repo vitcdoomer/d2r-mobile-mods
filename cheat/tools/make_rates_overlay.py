@@ -43,9 +43,15 @@ PHONE_DATA = os.path.join(PROJ, 'phone-resource', '游戏资源')
 MANIFEST = os.path.join(PROJ, 'decode', 'RomFS', 'data', 'build_manifest.psv')
 
 # ---- 烘值（命令行可覆盖；改后同步改 dmcheat_ui.c 的「爆率 / 密度（已内置）」文案）----
-UNIQUE = 80      # 暗金：除数 = 概率（⇒ P≈80%）
-SET = 80         # 绿色：同上
-RARE = 80        # 黄金（稀有）：同上
+# itemratio 真实公式（D2/D2R 通用）：
+#   Chance = (Base - (mlvl-qlvl)/Divisor) * 128
+#   Chance = Chance * 100/(100+EffectiveMF)
+#   if Chance < Min: Chance = Min
+#   命中概率 = 128 / Chance ≈ 1 / Base
+# 所以：Base=2 → 基准 50%；Divisor 越小、等级差越大 → 越接近 Min 决定的上限。
+RATE_BASE = 2    # 基准（2 ⇒ 50%；1 ⇒ 100%，不建议）
+RATE_DIV = 60    # 等级差除数（60 时，等级差 ≥45 即顶到上限）
+CAP = 80         # 目标上限（%）：Min = 128*100/CAP，80% ⇒ Min=160
 DENSITY = 4      # 怪物密度倍率（上限 20000）
 
 # ---- 原始表在 00-00000005.data 里的位置（cheat_scan.py 扫描所得；此处复解核对）----
@@ -126,13 +132,14 @@ def atomic_write(path, data):
 
 
 def patch_itemratio(ir):
-    """按 Android 金手指口径改三档品质：暗金 / 黄金 / 绿色（各 6 行统一值）。"""
+    """三档品质（暗金 / 黄金 / 绿色）统一按真实公式写 Base / Divisor / Min。"""
+    rate_min = int(128 * 100 / CAP + 0.5)
     t = bytearray(ir)
     for r in range(6):
         row = 4 + 68 * r
-        wr32(t, row + 0, 190); wr32(t, row + 4, UNIQUE)     # Unique / UniqueDivisor
-        wr32(t, row + 12, 190); wr32(t, row + 16, RARE)     # Rare / RareDivisor
-        wr32(t, row + 24, 190); wr32(t, row + 28, SET)      # Set / SetDivisor
+        wr32(t, row + 0, RATE_BASE); wr32(t, row + 4, RATE_DIV); wr32(t, row + 8, rate_min)    # Unique
+        wr32(t, row + 12, RATE_BASE); wr32(t, row + 16, RATE_DIV); wr32(t, row + 20, rate_min)  # Rare
+        wr32(t, row + 24, RATE_BASE); wr32(t, row + 28, RATE_DIV); wr32(t, row + 32, rate_min)  # Set
     return bytes(t)
 
 
@@ -219,17 +226,19 @@ def main():
         sys.stderr.reconfigure(encoding='utf-8', errors='replace')
     except Exception:
         pass
-    global UNIQUE, SET, RARE, DENSITY
+    global RATE_BASE, RATE_DIV, CAP, DENSITY
     args = sys.argv[1:]
     for i, a in enumerate(args):
-        if a == '--unique': UNIQUE = int(args[i + 1])
-        if a == '--set': SET = int(args[i + 1])
-        if a == '--rare': RARE = int(args[i + 1])
+        if a == '--cap': CAP = int(args[i + 1])
+        if a in ('--unique', '--set', '--rare'):   # 兼容旧参数：三档统一按上限处理
+            CAP = int(args[i + 1])
+        if a == '--base': RATE_BASE = int(args[i + 1])
+        if a == '--div': RATE_DIV = int(args[i + 1])
         if a == '--density': DENSITY = int(args[i + 1])
 
     say('==============================================')
-    say(' 爆率/密度 数据档覆盖层生成（值: 暗金 %d / 绿色 %d / 黄金 %d / 密度 x%d）'
-        % (UNIQUE, SET, RARE, DENSITY))
+    say(' 爆率/密度 数据档覆盖层生成（三档上限 %d%% · Base %d · Div %d / 密度 x%d）'
+        % (CAP, RATE_BASE, RATE_DIV, DENSITY))
     say('==============================================')
 
     if '--cached' in args:
@@ -237,23 +246,23 @@ def main():
         ir, lv = load_cached_tables()
         ir_p = patch_itemratio(ir)
         lv_p = lv
-        say('改值（离线）: 暗金=%d%% 绿色=%d%% 黄金=%d%%（各 6 行）/ 密度沿用缓存 ×%d'
-            % (UNIQUE, SET, RARE, DENSITY))
+        say('改值（离线）: 三档 Base=%d Div=%d Min=%d（上限 %d%%）/ 密度沿用缓存 ×%d'
+            % (RATE_BASE, RATE_DIV, int(128*100/CAP+0.5), CAP, DENSITY))
     else:
       try:
         ir, lv = derive_tables()
         ir_p = patch_itemratio(ir)
         lv_p, nmon = patch_levels(lv)
-        say('改值: 暗金=%d%% 绿色=%d%% 黄金=%d%%（各 6 行）/ 密度×%d（%d 个 MonDen 字段）'
-            % (UNIQUE, SET, RARE, DENSITY, nmon))
+        say('改值: 三档 Base=%d Div=%d Min=%d（上限 %d%%）/ 密度×%d（%d 个 MonDen 字段）'
+            % (RATE_BASE, RATE_DIV, int(128*100/CAP+0.5), CAP, DENSITY, nmon))
       except (PermissionError, OSError) as e:
         say('!! 读不到手机资源包（%s: %s）' % (e.__class__.__name__, e))
         say('!! 回退：使用 out/rates 里上次构建的已改表；黄金档就地补写，密度沿用缓存值')
         ir, lv = load_cached_tables()
         ir_p = patch_itemratio(ir)
         lv_p = lv
-        say('改值（离线回退）: 暗金=%d%% 绿色=%d%% 黄金=%d%%（各 6 行）/ 密度沿用缓存 ×%d'
-            % (UNIQUE, SET, RARE, DENSITY))
+        say('改值（离线回退）: 三档 Base=%d Div=%d Min=%d（上限 %d%%）/ 密度沿用缓存 ×%d'
+            % (RATE_BASE, RATE_DIV, int(128*100/CAP+0.5), CAP, DENSITY))
 
     rates_dir = os.path.join(OUT, 'rates')
     os.makedirs(rates_dir, exist_ok=True)
@@ -266,7 +275,7 @@ def main():
            hashlib.sha256(ir_p).hexdigest()[:12], hashlib.sha256(lv_p).hexdigest()[:12]))
 
     lines = ['# overlay_manifest — 爆率/密度覆盖层产物清单（cheat1d 构建）',
-             '# 值: unique=%d set=%d rare=%d density=%d' % (UNIQUE, SET, RARE, DENSITY)]
+             '# 值: base=%d div=%d cap=%d density=%d' % (RATE_BASE, RATE_DIV, CAP, DENSITY)]
     for tag, zip_dir in ZIPS:
         out_dir, newname = build_one(tag, zip_dir, ir_path, lv_path)
         for fn in ('.build.config', newname):
